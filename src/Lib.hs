@@ -1,29 +1,34 @@
 {-# LANGUAGE DataKinds       #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators   #-}
-module Lib
-    ( startApp
-    , app
-    ) where
 
-import Data.Aeson
-import Data.Aeson.TH
-import Network.Wai
-import Network.Wai.Handler.Warp
-import Servant
+module Lib
+  ( startApp
+  , app
+  ) where
+
+import           Data.Aeson
+import           Data.Aeson.TH
+import           Network.Wai
+import           Network.Wai.Handler.Warp
+import           Network.Wai.Logger       (withStdoutLogger)
+import           Servant
 
 data Patient = Patient
-  { patientId :: Int
+  { patientId        :: Int
   , patientFirstName :: String
-  , patientLastName :: String
+  , patientLastName  :: String
   } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions ''Patient)
 
-type API = "patients" :> Get '[JSON] [Patient]
+type API = "patients" :> Get '[ JSON] [Patient]
 
 startApp :: IO ()
-startApp = run 8080 app
+startApp =
+  withStdoutLogger $ \aplogger -> do
+    let settings = setPort 8080 $ setLogger aplogger defaultSettings
+    runSettings settings app
 
 app :: Application
 app = serve api server
@@ -35,6 +40,4 @@ server :: Server API
 server = return patients
 
 patients :: [Patient]
-patients = [ Patient 1 "Isaac" "Newton"
-           , Patient 2 "Albert" "Einstein"
-           ]
+patients = [Patient 1 "Isaac" "Newton", Patient 2 "Albert" "Einstein"]
