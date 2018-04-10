@@ -1,6 +1,7 @@
-{-# LANGUAGE DataKinds       #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeOperators   #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 module Lib
   ( startApp
@@ -14,10 +15,13 @@ import           Network.Wai.Handler.Warp
 import           Network.Wai.Logger       (withStdoutLogger)
 import           Servant
 
+data Exam = Exam
+  { id :: Int }
+
 data Patient = Patient
-  { patientId        :: Int
-  , patientFirstName :: String
-  , patientLastName  :: String
+  { id        :: Int
+  , firstName :: String
+  , lastName  :: String
   } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions ''Patient)

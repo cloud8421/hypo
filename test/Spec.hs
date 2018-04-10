@@ -20,5 +20,5 @@ spec =
       it "responds with 200" $ do get "/patients" `shouldRespondWith` 200
       it "responds with [patient]" $ do
         let patients =
-              "[{\"patientId\":1,\"patientFirstName\":\"Isaac\",\"patientLastName\":\"Newton\"},{\"patientId\":2,\"patientFirstName\":\"Albert\",\"patientLastName\":\"Einstein\"}]"
+              "[{\"id\":1,\"firstName\":\"Isaac\",\"lastName\":\"Newton\"},{\"id\":2,\"firstName\":\"Albert\",\"lastName\":\"Einstein\"}]"
         get "/patients" `shouldRespondWith` patients
