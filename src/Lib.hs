@@ -26,9 +26,13 @@ data Patient = Patient
   , lastName  :: String
   } deriving (Eq, Show)
 
-$(deriveJSON defaultOptions { fieldLabelModifier = camelTo2 '_' } ''Patient)
+concat <$> mapM
+  (deriveJSON defaultOptions { fieldLabelModifier = camelTo2 '_' })
+  [''Patient, ''Exam]
 
-type API = "patients" :> Get '[ JSON] [Patient]
+type API =
+    "patients" :> Get '[JSON] [Patient]
+    :<|> "exams" :> Get '[JSON] [Exam]
 
 startApp :: IO ()
 startApp =
@@ -44,6 +48,10 @@ api = Proxy
 
 server :: Server API
 server = return patients
+         :<|> return exams
 
 patients :: [Patient]
 patients = [Patient 1 "Isaac" "Newton", Patient 2 "Albert" "Einstein"]
+
+exams :: [Exam]
+exams = [Exam 1, Exam 2, Exam 3]

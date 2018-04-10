@@ -20,5 +20,11 @@ spec =
       it "responds with 200" $ do get "/patients" `shouldRespondWith` 200
       it "responds with [patient]" $ do
         let patients =
-              "[{\"id\":1,\"first_name\":\"Isaac\",\"last_name\":\"Newton\"},{\"id\":2,\"first_name\":\"Albert\",\"last_name\":\"Einstein\"}]"
+              [json|[{id: 1, first_name: "Isaac", last_name: "Newton"}, {id: 2, first_name: "Albert", last_name: "Einstein"}]|]
         get "/patients" `shouldRespondWith` patients
+    describe "GET /exams" $ do
+      it "responds with 200" $ do get "/exams" `shouldRespondWith` 200
+      it "responds with [exam]" $ do
+        let patients =
+              [json|[{id: 1}, {id: 2}, {id: 3}]|]
+        get "/exams" `shouldRespondWith` patients
