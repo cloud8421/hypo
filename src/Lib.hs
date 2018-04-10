@@ -15,19 +15,26 @@ module Lib
   ( startApp
   , app
   , runMigrations
-  ) where
+  )
+where
 
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Data.Aeson
+import           Control.Monad.IO.Class         ( liftIO )
 import           Data.Aeson.TH
-import           Data.Aeson.Types         (camelTo2)
-import           Data.Text                (Text)
+import           Data.Aeson.Casing              ( aesonPrefix
+                                                , snakeCase
+                                                )
+import           Data.Text                      ( Text )
 import           GHC.Generics
 import           Network.Wai
 import           Network.Wai.Handler.Warp
-import           Network.Wai.Logger       (withStdoutLogger)
+import           Network.Wai.Logger             ( withStdoutLogger )
 import           Servant
-import           Database.Persist.TH      (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
+import           Database.Persist.TH            ( mkMigrate
+                                                , mkPersist
+                                                , persistLowerCase
+                                                , share
+                                                , sqlSettings
+                                                )
 import           Database.Persist
 import           Database.Persist.Sqlite
 
@@ -41,19 +48,17 @@ Exam
     deriving Eq Show Generic
 |]
 
-concat <$> mapM
-  (deriveJSON defaultOptions { fieldLabelModifier = camelTo2 '_' })
-  [''Patient, ''Exam]
+deriveJSON (aesonPrefix snakeCase) ''Patient
+deriveJSON (aesonPrefix snakeCase) ''Exam
 
 type API =
     "patients" :> Get '[JSON] [Patient]
     :<|> "exams" :> Get '[JSON] [Exam]
 
 startApp :: IO ()
-startApp =
-  withStdoutLogger $ \aplogger -> do
-    let settings = setPort 8080 $ setLogger aplogger defaultSettings
-    runSettings settings app
+startApp = withStdoutLogger $ \aplogger -> do
+  let settings = setPort 8080 $ setLogger aplogger defaultSettings
+  runSettings settings app
 
 app :: Application
 app = serve api server
@@ -64,21 +69,21 @@ api = Proxy
 runDb = runSqlite "data/hypo.db"
 
 runMigrations :: IO ()
-runMigrations =
-    runDb $ do runMigration migrateAll
+runMigrations = runDb $ do
+  runMigration migrateAll
 
 server :: Server API
 server = getPatients :<|> getExams
-    where
-        getPatients = liftIO selectPatients
-        getExams = liftIO selectExams
+ where
+  getPatients = liftIO selectPatients
+  getExams    = liftIO selectExams
 
 selectPatients :: IO [Patient]
 selectPatients = do
-    patientList <- runDb $ selectList [] []
-    return $ map (\(Entity _ u) -> u) patientList
+  patientList <- runDb $ selectList [] []
+  return $ map (\(Entity _ u) -> u) patientList
 
 selectExams :: IO [Exam]
 selectExams = do
-    examList <- runDb $ selectList [] []
-    return $ map (\(Entity _ u) -> u) examList
+  examList <- runDb $ selectList [] []
+  return $ map (\(Entity _ u) -> u) examList
