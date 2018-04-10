@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeOperators         #-}
@@ -10,6 +11,7 @@ module Lib
 
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.Aeson.Types         (camelTo2)
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Network.Wai.Logger       (withStdoutLogger)
@@ -24,7 +26,7 @@ data Patient = Patient
   , lastName  :: String
   } deriving (Eq, Show)
 
-$(deriveJSON defaultOptions ''Patient)
+$(deriveJSON defaultOptions { fieldLabelModifier = camelTo2 '_' } ''Patient)
 
 type API = "patients" :> Get '[ JSON] [Patient]
 
