@@ -53,6 +53,7 @@ deriveJSON (aesonPrefix snakeCase) ''Exam
 
 type API =
     "patients" :> Get '[JSON] [Patient]
+    :<|> "patients" :> ReqBody '[JSON] Patient :> Post '[JSON] (Key Patient)
     :<|> "exams" :> Get '[JSON] [Exam]
 
 startApp :: IO ()
@@ -73,15 +74,19 @@ runMigrations = runDb $ do
   runMigration migrateAll
 
 server :: Server API
-server = getPatients :<|> getExams
+server = getPatients :<|> createPatient :<|> getExams
  where
   getPatients = liftIO selectPatients
+  createPatient patient = liftIO $ insertPatient patient
   getExams    = liftIO selectExams
 
 selectPatients :: IO [Patient]
 selectPatients = do
   patientList <- runDb $ selectList [] []
   return $ map (\(Entity _ u) -> u) patientList
+
+insertPatient :: Patient -> IO (Key Patient)
+insertPatient = runDb . insert
 
 selectExams :: IO [Exam]
 selectExams = do
