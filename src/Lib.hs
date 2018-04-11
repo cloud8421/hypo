@@ -23,6 +23,7 @@ import           Data.Aeson.TH
 import           Data.Aeson.Casing              ( aesonPrefix
                                                 , snakeCase
                                                 )
+import           Data.Int                       ( Int64 )
 import           Data.Text                      ( Text )
 import           GHC.Generics
 import           Network.Wai
@@ -45,6 +46,10 @@ Patient
     deriving  Eq Show Generic
 Exam
     type     Text
+    patientId Int64
+    value    Text
+    range    Text
+    notes    Text
     deriving Eq Show Generic
 |]
 
@@ -54,6 +59,9 @@ deriveJSON (aesonPrefix snakeCase) ''Exam
 type API =
     "patients" :> Get '[JSON] [Patient]
     :<|> "patients" :> ReqBody '[JSON] Patient :> Post '[JSON] (Key Patient)
+    :<|> "patients" :> Capture "patiend_id" (Key Patient)
+                    :> ReqBody '[JSON] Patient
+                    :> Put '[JSON] ()
     :<|> "exams" :> Get '[JSON] [Exam]
 
 startApp :: IO ()
@@ -74,11 +82,12 @@ runMigrations = runDb $ do
   runMigration migrateAll
 
 server :: Server API
-server = getPatients :<|> createPatient :<|> getExams
- where
-  getPatients = liftIO selectPatients
-  createPatient patient = liftIO $ insertPatient patient
-  getExams    = liftIO selectExams
+server = getPatients :<|> postPatient :<|> putPatient :<|> getExams
+  where
+    getPatients = liftIO selectPatients
+    postPatient patient = liftIO $ insertPatient patient
+    putPatient patientId newPatient = liftIO $ updatePatient patientId newPatient
+    getExams    = liftIO selectExams
 
 selectPatients :: IO [Patient]
 selectPatients = do
@@ -87,6 +96,10 @@ selectPatients = do
 
 insertPatient :: Patient -> IO (Key Patient)
 insertPatient = runDb . insert
+
+updatePatient :: Key Patient -> Patient -> IO ()
+updatePatient patientId newPatient =
+    runDb . replace patientId $ newPatient
 
 selectExams :: IO [Exam]
 selectExams = do
