@@ -59,9 +59,11 @@ deriveJSON (aesonPrefix snakeCase) ''Exam
 type API =
     "patients" :> Get '[JSON] [Patient]
     :<|> "patients" :> ReqBody '[JSON] Patient :> Post '[JSON] (Key Patient)
-    :<|> "patients" :> Capture "patiend_id" (Key Patient)
+    :<|> "patients" :> Capture "patient_id" (Key Patient)
                     :> ReqBody '[JSON] Patient
                     :> Put '[JSON] ()
+    :<|> "patients" :> Capture "patient_id" (Key Patient)
+                    :> Delete '[JSON] ()
     :<|> "exams" :> Get '[JSON] [Exam]
 
 startApp :: IO ()
@@ -82,11 +84,12 @@ runMigrations = runDb $ do
   runMigration migrateAll
 
 server :: Server API
-server = getPatients :<|> postPatient :<|> putPatient :<|> getExams
+server = getPatients :<|> postPatient :<|> putPatient :<|> deletePatient :<|> getExams
   where
     getPatients = liftIO selectPatients
     postPatient patient = liftIO $ insertPatient patient
     putPatient patientId newPatient = liftIO $ updatePatient patientId newPatient
+    deletePatient patientId = liftIO $ dbDeletePatient patientId
     getExams    = liftIO selectExams
 
 selectPatients :: IO [Patient]
@@ -100,6 +103,10 @@ insertPatient = runDb . insert
 updatePatient :: Key Patient -> Patient -> IO ()
 updatePatient patientId newPatient =
     runDb . replace patientId $ newPatient
+
+dbDeletePatient :: Key Patient -> IO ()
+dbDeletePatient patientId =
+    runDb . delete $ patientId
 
 selectExams :: IO [Exam]
 selectExams = do
