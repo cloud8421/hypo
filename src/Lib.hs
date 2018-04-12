@@ -46,13 +46,15 @@ type API =
 
 startAppDev :: Text -> IO ()
 startAppDev databasePath = runStderrLoggingT $
-  withSqlitePool databasePath 5 $ \pool -> liftIO $ do
-    run 8080 (logStdoutDev (app pool))
+  withSqlitePool databasePath 5
+  $ \pool -> liftIO
+  $ run 8080 $ logStdoutDev $ app pool
 
 startAppProd :: Text -> IO ()
 startAppProd databasePath = runStderrLoggingT $
-  withSqlitePool databasePath 5 $ \pool -> liftIO $ do
-    run 8080 (logStdout (app pool))
+  withSqlitePool databasePath 5
+    $ \pool -> liftIO
+    $ run 8080 $ logStdout $ app pool
 
 app :: ConnectionPool -> Application
 app pool = serve api (server pool)
@@ -61,8 +63,7 @@ api :: Proxy API
 api = Proxy
 
 runMigrations :: ConnectionPool -> IO ()
-runMigrations pool =
-  runSqlPool (runMigration migrateAll) pool
+runMigrations = runSqlPool (runMigration migrateAll)
 
 dbMigrate :: Text -> IO ()
 dbMigrate databasePath = runStderrLoggingT $

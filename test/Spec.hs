@@ -23,14 +23,12 @@ spec :: IO Application -> Spec
 spec application =
   with application $ do
     describe "GET /patients" $ do
-      it "responds with 200" $ do get "/patients" `shouldRespondWith` 200
+      it "responds with 200" $ get "/patients" `shouldRespondWith` 200
       it "responds with [patient]" $ do
-        let patients =
-              [json|[]|]
+        let patients = [json|[]|]
         get "/patients" `shouldRespondWith` patients
     describe "GET /exams" $ do
-      it "responds with 200" $ do get "/exams" `shouldRespondWith` 200
+      it "responds with 200" $ get "/exams" `shouldRespondWith` 200
       it "responds with [exam]" $ do
-        let patients =
-              [json|[]|]
-        get "/exams" `shouldRespondWith` patients
+        let exams = [json|[]|]
+        get "/exams" `shouldRespondWith` exams
