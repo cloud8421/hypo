@@ -20,6 +20,7 @@ import           Servant
 import           Database.Persist
 import           Database.Persist.Sqlite
 import           Schema
+import           Data.Text                            (Text)
 
 type GetPatients = "patients" :> Get '[JSON] [Patient]
 
@@ -42,14 +43,14 @@ type API =
     :<|> DeletePatient
     :<|> GetExams
 
-startAppDev :: IO ()
-startAppDev = runStderrLoggingT $
-  withSqlitePool "data/hypo.db" 5 $ \pool -> liftIO $ do
+startAppDev :: Text -> IO ()
+startAppDev databasePath = runStderrLoggingT $
+  withSqlitePool databasePath 5 $ \pool -> liftIO $ do
     run 8080 (logStdoutDev (app pool))
 
-startAppProd :: IO ()
-startAppProd = runStderrLoggingT $
-  withSqlitePool "data/hypo.db" 5 $ \pool -> liftIO $ do
+startAppProd :: Text -> IO ()
+startAppProd databasePath = runStderrLoggingT $
+  withSqlitePool databasePath 5 $ \pool -> liftIO $ do
     run 8080 (logStdout (app pool))
 
 app :: ConnectionPool -> Application
@@ -58,9 +59,9 @@ app pool = serve api (server pool)
 api :: Proxy API
 api = Proxy
 
-runMigrations :: IO ()
-runMigrations = runStderrLoggingT $
-  withSqlitePool "data/hypo.db" 5 $ \pool -> liftIO $ do
+runMigrations :: Text -> IO ()
+runMigrations databasePath = runStderrLoggingT $
+  withSqlitePool databasePath 5 $ \pool -> liftIO $ do
     runSqlPool (runMigration migrateAll) pool
 
 server :: ConnectionPool -> Server API
