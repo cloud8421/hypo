@@ -12,7 +12,8 @@
 {-# LANGUAGE TypeOperators              #-}
 
 module Lib
-  ( startApp
+  ( startAppProd
+  , startAppDev
   , app
   , runMigrations
   )
@@ -28,7 +29,7 @@ import           Data.Text                      ( Text )
 import           GHC.Generics
 import           Network.Wai
 import           Network.Wai.Handler.Warp
-import           Network.Wai.Logger             ( withStdoutLogger )
+import           Network.Wai.Middleware.RequestLogger ( logStdoutDev, logStdout )
 import           Servant
 import           Database.Persist.TH            ( mkMigrate
                                                 , mkPersist
@@ -66,10 +67,13 @@ type API =
                     :> Delete '[JSON] ()
     :<|> "exams" :> Get '[JSON] [Exam]
 
-startApp :: IO ()
-startApp = withStdoutLogger $ \aplogger -> do
-  let settings = setPort 8080 $ setLogger aplogger defaultSettings
-  runSettings settings app
+startAppDev :: IO ()
+startAppDev =
+  run 8080 (logStdoutDev app)
+
+startAppProd :: IO ()
+startAppProd =
+  run 8080 (logStdout app)
 
 app :: Application
 app = serve api server
@@ -80,8 +84,7 @@ api = Proxy
 runDb = runSqlite "data/hypo.db"
 
 runMigrations :: IO ()
-runMigrations = runDb $ do
-  runMigration migrateAll
+runMigrations = runDb $ runMigration migrateAll
 
 server :: Server API
 server = getPatients :<|> postPatient :<|> putPatient :<|> deletePatient :<|> getExams

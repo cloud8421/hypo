@@ -22,6 +22,7 @@ library
                      , servant-server
                      , wai
                      , wai-logger
+                     , wai-extra
                      , warp
                      , persistent
                      , persistent-sqlite
