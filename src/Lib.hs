@@ -57,15 +57,26 @@ Exam
 deriveJSON (aesonPrefix snakeCase) ''Patient
 deriveJSON (aesonPrefix snakeCase) ''Exam
 
+type GetPatients = "patients" :> Get '[JSON] [Patient]
+
+type PostPatients = "patients" :> ReqBody '[JSON] Patient
+                               :> Post '[JSON] (Key Patient)
+
+type PutPatient = "patients" :> Capture "patient_id" (Key Patient)
+                             :> ReqBody '[JSON] Patient
+                             :> Put '[JSON] ()
+
+type DeletePatient = "patients" :> Capture "patient_id" (Key Patient)
+                                :> Delete '[JSON] ()
+
+type GetExams = "exams" :> Get '[JSON] [Exam]
+
 type API =
-    "patients" :> Get '[JSON] [Patient]
-    :<|> "patients" :> ReqBody '[JSON] Patient :> Post '[JSON] (Key Patient)
-    :<|> "patients" :> Capture "patient_id" (Key Patient)
-                    :> ReqBody '[JSON] Patient
-                    :> Put '[JSON] ()
-    :<|> "patients" :> Capture "patient_id" (Key Patient)
-                    :> Delete '[JSON] ()
-    :<|> "exams" :> Get '[JSON] [Exam]
+    GetPatients
+    :<|> PostPatients
+    :<|> PutPatient
+    :<|> DeletePatient
+    :<|> GetExams
 
 startAppDev :: IO ()
 startAppDev =
