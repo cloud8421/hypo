@@ -15,7 +15,7 @@ startApp databasePath True = startAppProd databasePath
 opts :: Parser (IO ())
 opts = subparser
     (  command "start"   (info (startApp <$> databaseFileOption <*> isProdOption) idm)
-    <> command "migrate" (info (runMigrations <$> databaseFileOption) idm) )
+    <> command "migrate" (info (dbMigrate <$> databaseFileOption) idm) )
 
 databaseFileOption :: Parser Text
 databaseFileOption =

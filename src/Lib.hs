@@ -7,6 +7,7 @@ module Lib
   ( startAppProd
   , startAppDev
   , app
+  , dbMigrate
   , runMigrations
   )
 where
@@ -59,10 +60,13 @@ app pool = serve api (server pool)
 api :: Proxy API
 api = Proxy
 
-runMigrations :: Text -> IO ()
-runMigrations databasePath = runStderrLoggingT $
-  withSqlitePool databasePath 5 $ \pool -> liftIO $ do
-    runSqlPool (runMigration migrateAll) pool
+runMigrations :: ConnectionPool -> IO ()
+runMigrations pool =
+  runSqlPool (runMigration migrateAll) pool
+
+dbMigrate :: Text -> IO ()
+dbMigrate databasePath = runStderrLoggingT $
+  withSqlitePool databasePath 5 $ \pool -> liftIO $ runMigrations pool
 
 server :: ConnectionPool -> Server API
 server pool = getPatients :<|> postPatient :<|> putPatient :<|> deletePatient :<|> getExams
