@@ -18,12 +18,16 @@ import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Network.Wai.Middleware.RequestLogger ( logStdoutDev, logStdout )
 import           Servant
+import           Servant.Server
 import           Database.Persist
 import           Database.Persist.Sqlite
 import           Schema
 import           Data.Text                            (Text)
 
 type GetPatients = "patients" :> Get '[JSON] [Patient]
+
+type GetPatient = "patients" :> Capture "patient_id" (Key Patient)
+                             :> Get '[JSON] Patient
 
 type PostPatients = "patients" :> ReqBody '[JSON] Patient
                                :> Post '[JSON] (Key Patient)
@@ -39,6 +43,7 @@ type GetExams = "exams" :> Get '[JSON] [Exam]
 
 type API =
     GetPatients
+    :<|> GetPatient
     :<|> PostPatients
     :<|> PutPatient
     :<|> DeletePatient
@@ -70,9 +75,19 @@ dbMigrate databasePath =
 
 server :: ConnectionPool -> Server API
 server pool =
-  getPatients :<|> postPatient :<|> putPatient :<|> deletePatient :<|> getExams
+  getPatients
+    :<|> getPatient
+    :<|> postPatient
+    :<|> putPatient
+    :<|> deletePatient
+    :<|> getExams
  where
   getPatients = liftIO $ selectPatients pool
+  getPatient patientId = do
+    maybePatient <- liftIO $ selectPatient pool patientId
+    case maybePatient of
+      Nothing      -> Handler $ throwError err404
+      Just patient -> return patient
   postPatient patient = liftIO $ insertPatient pool patient
   putPatient patientId newPatient =
     liftIO $ updatePatient pool patientId newPatient
@@ -83,6 +98,9 @@ selectPatients :: ConnectionPool -> IO [Patient]
 selectPatients pool = do
   patientList <- runSqlPool (selectList [] []) pool
   return $ map (\(Entity _ u) -> u) patientList
+
+selectPatient :: ConnectionPool -> Key Patient -> IO (Maybe Patient)
+selectPatient pool patientId = runSqlPool (get patientId) pool
 
 insertPatient :: ConnectionPool -> Patient -> IO (Key Patient)
 insertPatient pool patient = runSqlPool (insert patient) pool
