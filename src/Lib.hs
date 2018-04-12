@@ -45,16 +45,14 @@ type API =
     :<|> GetExams
 
 startAppDev :: Text -> IO ()
-startAppDev databasePath = runStderrLoggingT $
-  withSqlitePool databasePath 5
-  $ \pool -> liftIO
-  $ run 8080 $ logStdoutDev $ app pool
+startAppDev databasePath =
+  runStderrLoggingT $ withSqlitePool databasePath 5 $ \pool ->
+    liftIO $ run 8080 $ logStdoutDev $ app pool
 
 startAppProd :: Text -> IO ()
-startAppProd databasePath = runStderrLoggingT $
-  withSqlitePool databasePath 5
-    $ \pool -> liftIO
-    $ run 8080 $ logStdout $ app pool
+startAppProd databasePath =
+  runStderrLoggingT $ withSqlitePool databasePath 5 $ \pool ->
+    liftIO $ run 8080 $ logStdout $ app pool
 
 app :: ConnectionPool -> Application
 app pool = serve api (server pool)
@@ -66,17 +64,20 @@ runMigrations :: ConnectionPool -> IO ()
 runMigrations = runSqlPool (runMigration migrateAll)
 
 dbMigrate :: Text -> IO ()
-dbMigrate databasePath = runStderrLoggingT $
-  withSqlitePool databasePath 5 $ \pool -> liftIO $ runMigrations pool
+dbMigrate databasePath =
+  runStderrLoggingT $ withSqlitePool databasePath 5 $ \pool ->
+    liftIO $ runMigrations pool
 
 server :: ConnectionPool -> Server API
-server pool = getPatients :<|> postPatient :<|> putPatient :<|> deletePatient :<|> getExams
-  where
-    getPatients = liftIO $ selectPatients pool
-    postPatient patient = liftIO $ insertPatient pool patient
-    putPatient patientId newPatient = liftIO $ updatePatient pool patientId newPatient
-    deletePatient patientId = liftIO $ dbDeletePatient pool patientId
-    getExams    = liftIO $ selectExams pool
+server pool =
+  getPatients :<|> postPatient :<|> putPatient :<|> deletePatient :<|> getExams
+ where
+  getPatients = liftIO $ selectPatients pool
+  postPatient patient = liftIO $ insertPatient pool patient
+  putPatient patientId newPatient =
+    liftIO $ updatePatient pool patientId newPatient
+  deletePatient patientId = liftIO $ dbDeletePatient pool patientId
+  getExams = liftIO $ selectExams pool
 
 selectPatients :: ConnectionPool -> IO [Patient]
 selectPatients pool = do
@@ -88,11 +89,10 @@ insertPatient pool patient = runSqlPool (insert patient) pool
 
 updatePatient :: ConnectionPool -> Key Patient -> Patient -> IO ()
 updatePatient pool patientId newPatient =
-    runSqlPool (replace patientId newPatient) pool
+  runSqlPool (replace patientId newPatient) pool
 
 dbDeletePatient :: ConnectionPool -> Key Patient -> IO ()
-dbDeletePatient pool patientId =
-    runSqlPool (delete patientId) pool
+dbDeletePatient pool patientId = runSqlPool (delete patientId) pool
 
 selectExams :: ConnectionPool -> IO [Exam]
 selectExams pool = do
