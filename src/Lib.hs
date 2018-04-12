@@ -11,7 +11,8 @@ module Lib
   )
 where
 
-import           Control.Monad.IO.Class         ( liftIO )
+import           Control.Monad.Logger
+import           Control.Monad.IO.Class               ( liftIO )
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Network.Wai.Middleware.RequestLogger ( logStdoutDev, logStdout )
@@ -42,50 +43,52 @@ type API =
     :<|> GetExams
 
 startAppDev :: IO ()
-startAppDev =
-  run 8080 (logStdoutDev app)
+startAppDev = runStderrLoggingT $
+  withSqlitePool "data/hypo.db" 5 $ \pool -> liftIO $ do
+    run 8080 (logStdoutDev (app pool))
 
 startAppProd :: IO ()
-startAppProd =
-  run 8080 (logStdout app)
+startAppProd = runStderrLoggingT $
+  withSqlitePool "data/hypo.db" 5 $ \pool -> liftIO $ do
+    run 8080 (logStdout (app pool))
 
-app :: Application
-app = serve api server
+app :: ConnectionPool -> Application
+app pool = serve api (server pool)
 
 api :: Proxy API
 api = Proxy
 
-runDb = runSqlite "data/hypo.db"
-
 runMigrations :: IO ()
-runMigrations = runDb $ runMigration migrateAll
+runMigrations = runStderrLoggingT $
+  withSqlitePool "data/hypo.db" 5 $ \pool -> liftIO $ do
+    runSqlPool (runMigration migrateAll) pool
 
-server :: Server API
-server = getPatients :<|> postPatient :<|> putPatient :<|> deletePatient :<|> getExams
+server :: ConnectionPool -> Server API
+server pool = getPatients :<|> postPatient :<|> putPatient :<|> deletePatient :<|> getExams
   where
-    getPatients = liftIO selectPatients
-    postPatient patient = liftIO $ insertPatient patient
-    putPatient patientId newPatient = liftIO $ updatePatient patientId newPatient
-    deletePatient patientId = liftIO $ dbDeletePatient patientId
-    getExams    = liftIO selectExams
+    getPatients = liftIO $ selectPatients pool
+    postPatient patient = liftIO $ insertPatient pool patient
+    putPatient patientId newPatient = liftIO $ updatePatient pool patientId newPatient
+    deletePatient patientId = liftIO $ dbDeletePatient pool patientId
+    getExams    = liftIO $ selectExams pool
 
-selectPatients :: IO [Patient]
-selectPatients = do
-  patientList <- runDb $ selectList [] []
+selectPatients :: ConnectionPool -> IO [Patient]
+selectPatients pool = do
+  patientList <- runSqlPool (selectList [] []) pool
   return $ map (\(Entity _ u) -> u) patientList
 
-insertPatient :: Patient -> IO (Key Patient)
-insertPatient = runDb . insert
+insertPatient :: ConnectionPool -> Patient -> IO (Key Patient)
+insertPatient pool patient = runSqlPool (insert patient) pool
 
-updatePatient :: Key Patient -> Patient -> IO ()
-updatePatient patientId newPatient =
-    runDb . replace patientId $ newPatient
+updatePatient :: ConnectionPool -> Key Patient -> Patient -> IO ()
+updatePatient pool patientId newPatient =
+    runSqlPool (replace patientId newPatient) pool
 
-dbDeletePatient :: Key Patient -> IO ()
-dbDeletePatient patientId =
-    runDb . delete $ patientId
+dbDeletePatient :: ConnectionPool -> Key Patient -> IO ()
+dbDeletePatient pool patientId =
+    runSqlPool (delete patientId) pool
 
-selectExams :: IO [Exam]
-selectExams = do
-  examList <- runDb $ selectList [] []
+selectExams :: ConnectionPool -> IO [Exam]
+selectExams pool = do
+  examList <- runSqlPool (selectList [] []) pool
   return $ map (\(Entity _ u) -> u) examList

@@ -29,6 +29,7 @@ library
                      , persistent-sqlite
                      , persistent-template
                      , text
+                     , monad-logger
   default-language:    Haskell2010
 
 executable hypo-exe
