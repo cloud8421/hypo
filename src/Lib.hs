@@ -1,14 +1,6 @@
 {-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE DuplicateRecordFields      #-}
 {-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 
 module Lib
@@ -20,42 +12,13 @@ module Lib
 where
 
 import           Control.Monad.IO.Class         ( liftIO )
-import           Data.Aeson.TH
-import           Data.Aeson.Casing              ( aesonPrefix
-                                                , snakeCase
-                                                )
-import           Data.Int                       ( Int64 )
-import           Data.Text                      ( Text )
-import           GHC.Generics
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Network.Wai.Middleware.RequestLogger ( logStdoutDev, logStdout )
 import           Servant
-import           Database.Persist.TH            ( mkMigrate
-                                                , mkPersist
-                                                , persistLowerCase
-                                                , share
-                                                , sqlSettings
-                                                )
 import           Database.Persist
 import           Database.Persist.Sqlite
-
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-Patient
-    firstName Text
-    lastName  Text
-    deriving  Eq Show Generic
-Exam
-    type     Text
-    patientId Int64
-    value    Text
-    range    Text
-    notes    Text
-    deriving Eq Show Generic
-|]
-
-deriveJSON (aesonPrefix snakeCase) ''Patient
-deriveJSON (aesonPrefix snakeCase) ''Exam
+import           Schema
 
 type GetPatients = "patients" :> Get '[JSON] [Patient]
 
