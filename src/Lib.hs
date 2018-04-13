@@ -9,6 +9,7 @@ module Lib
   , app
   , dbMigrate
   , runMigrations
+  , insertPatient
   )
 where
 
