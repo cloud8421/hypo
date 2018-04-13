@@ -28,7 +28,7 @@ type GetPatient = "patients" :> Capture "patient_id" (Key Patient)
                              :> Get '[JSON] (Entity Patient)
 
 type PostPatients = "patients" :> ReqBody '[JSON] Patient
-                               :> Post '[JSON] (Key Patient)
+                               :> PostCreated '[JSON] (Key Patient)
 
 type PutPatient = "patients" :> Capture "patient_id" (Key Patient)
                              :> ReqBody '[JSON] Patient

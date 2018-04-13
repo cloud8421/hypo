@@ -50,8 +50,8 @@ spec application = with application $ do
     let reqBody = [json|{"firstName":"Ada","lastName":"Lovelace"}|]
     let req = jsonPost "/patients" reqBody
     let respBody = "3"
-    it "responds with 200" $ req `shouldRespondWith` 200
-    it "responds with patient id" $ req `shouldRespondWith` respBody
+    it "responds with 201" $ req `shouldRespondWith` 201
+    it "responds with patient id" $ req `shouldRespondWith` respBody {matchStatus = 201}
 
   describe "GET /exams" $ do
     let req = jsonGet "/exams"
