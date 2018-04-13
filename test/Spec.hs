@@ -27,32 +27,34 @@ main = runNoLoggingT $ withSqlitePool ":memory:" 1 $ \pool -> do
 spec :: IO Application -> Spec
 spec application = with application $ do
   describe "GET /patients" $ do
-    it "responds with 200" $ get "/patients" `shouldRespondWith` 200
-    it "responds with [patient]" $ do
-      let patients = [json|[{"first_name":"Claudio","last_name":"Ortolina"}]|]
-      jsonGet "/patients" `shouldRespondWith` patients
+    let req = jsonGet "/patients"
+    let respBody = [json|[{"first_name":"Claudio","last_name":"Ortolina"}]|]
+    it "responds with 200" $ req `shouldRespondWith` 200
+    it "responds with [patient]" $ req `shouldRespondWith` respBody
+
   describe "GET /patients/:patient_id with existing patient" $ do
-    it "responds with 200" $ jsonGet "/patients/1" `shouldRespondWith` 200
-    it "responds with patient" $ do
-      let patients = [json|{"first_name":"Claudio","last_name":"Ortolina"}|]
-      jsonGet "/patients/1" `shouldRespondWith` patients
-  describe "GET /patients/:patient_id with non existing patient"
-    $                   it "responds with 404"
-    $                   jsonGet "/patients/999"
-    `shouldRespondWith` 404
+    let req = jsonGet "/patients/1"
+    let respBody = [json|{"first_name":"Claudio","last_name":"Ortolina"}|]
+    it "responds with 200" $ req `shouldRespondWith` 200
+    it "responds with patient" $ req `shouldRespondWith` respBody
+
+  describe "GET /patients/:patient_id with non existing patient" $ do
+    let req = jsonGet "/patients/999"
+    it "responds with 404" $ req `shouldRespondWith` 404
+
   describe "POST /patients" $ do
-    let patientData = [json|{"first_name":"Ada","last_name":"Lovelace"}|]
-    it "responds with 200"
-      $                   jsonPost "/patients" patientData
-      `shouldRespondWith` 200
-    it "responds with patient id"
-      $                   jsonPost "/patients" patientData
-      `shouldRespondWith` "3"
+    let reqBody = [json|{"first_name":"Ada","last_name":"Lovelace"}|]
+    let req = jsonPost "/patients" reqBody
+    let respBody = "3"
+    it "responds with 200" $ req `shouldRespondWith` 200
+    it "responds with patient id" $ req `shouldRespondWith` respBody
+
   describe "GET /exams" $ do
-    it "responds with 200" $ jsonGet "/exams" `shouldRespondWith` 200
-    it "responds with [exam]" $ do
-      let exams = [json|[]|]
-      jsonGet "/exams" `shouldRespondWith` exams
+    let req = jsonGet "/exams"
+    let respBody = [json|[]|]
+
+    it "responds with 200" $ req `shouldRespondWith` 200
+    it "responds with [exam]" $ req `shouldRespondWith` respBody
 
 jsonPost path = request methodPost path [(hContentType, "application/json")]
 
