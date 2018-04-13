@@ -32,10 +32,10 @@ type PostPatients = "patients" :> ReqBody '[JSON] Patient
 
 type PutPatient = "patients" :> Capture "patient_id" (Key Patient)
                              :> ReqBody '[JSON] Patient
-                             :> Put '[JSON] ()
+                             :> Put '[JSON] NoContent
 
 type DeletePatient = "patients" :> Capture "patient_id" (Key Patient)
-                                :> Delete '[JSON] ()
+                                :> DeleteNoContent '[JSON] NoContent
 
 type GetExams = "exams" :> Get '[JSON] [Exam]
 
@@ -84,7 +84,10 @@ server pool =
       Nothing      -> Handler $ throwError err404
       Just patient -> return patient
   postPatient patient = liftIO $ insertPatient pool patient
-  putPatient patientId newPatient =
+  putPatient patientId newPatient = do
     liftIO $ updatePatient pool patientId newPatient
-  deletePatient patientId = liftIO $ dbDeletePatient pool patientId
+    return NoContent
+  deletePatient patientId = do
+    liftIO $ dbDeletePatient pool patientId
+    return NoContent
   getExams = liftIO $ selectExams pool
