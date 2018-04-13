@@ -15,7 +15,10 @@ import           Store                   (runMigrations, insertPatient)
 import           Test.Hspec
 import           Test.Hspec.Wai
 import           Network.HTTP.Types
+import           Network.Wai.Test        (SResponse)
 import           Test.Hspec.Wai.JSON
+import           Data.ByteString         (ByteString)
+import qualified Data.ByteString.Lazy as LB
 
 
 main :: IO ()
@@ -57,6 +60,8 @@ spec application = with application $ do
     it "responds with 200" $ req `shouldRespondWith` 200
     it "responds with [exam]" $ req `shouldRespondWith` respBody
 
+jsonPost :: ByteString -> LB.ByteString -> WaiSession SResponse
 jsonPost path = request methodPost path [(hContentType, "application/json")]
 
+jsonGet :: ByteString -> WaiSession SResponse
 jsonGet path = request methodGet path [(hContentType, "application/json")] ""
