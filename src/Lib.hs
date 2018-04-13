@@ -16,6 +16,7 @@ import           Control.Monad.IO.Class               ( liftIO )
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Network.Wai.Middleware.RequestLogger ( logStdoutDev, logStdout )
+import           Static
 import           Servant
 import           Database.Persist.Sqlite
 import           Schema
@@ -50,12 +51,12 @@ type API =
 startAppDev :: Text -> IO ()
 startAppDev databasePath =
   runStderrLoggingT $ withSqlitePool databasePath 5 $ \pool ->
-    liftIO $ run 8080 $ logStdoutDev $ app pool
+    liftIO $ run 8080 $ logStdoutDev $ staticMiddleware $ app pool
 
 startAppProd :: Text -> IO ()
 startAppProd databasePath =
   runStderrLoggingT $ withSqlitePool databasePath 5 $ \pool ->
-    liftIO $ run 8080 $ logStdout $ app pool
+    liftIO $ run 8080 $ logStdout $ staticMiddleware $ app pool
 
 app :: ConnectionPool -> Application
 app pool = serve api (server pool)
