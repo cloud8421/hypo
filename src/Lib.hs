@@ -19,7 +19,6 @@ import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Network.Wai.Middleware.RequestLogger ( logStdoutDev, logStdout )
 import           Servant
-import           Servant.Server
 import           Database.Persist
 import           Database.Persist.Sqlite
 import           Schema
