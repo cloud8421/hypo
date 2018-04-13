@@ -9,8 +9,9 @@ module Main
 import           Servant                 (Application)
 import           Control.Monad.Logger
 import           Database.Persist.Sqlite (withSqlitePool)
-import           Lib                     (app, runMigrations, insertPatient)
+import           Lib                     (app)
 import           Schema
+import           Store                   (runMigrations, insertPatient)
 import           Test.Hspec
 import           Test.Hspec.Wai
 import           Network.HTTP.Types
@@ -20,7 +21,7 @@ import           Test.Hspec.Wai.JSON
 main :: IO ()
 main = runNoLoggingT $ withSqlitePool ":memory:" 1 $ \pool -> do
   liftIO $ runMigrations pool
-  liftIO $ insertPatient pool examplePatient
+  _ <- liftIO $ insertPatient pool examplePatient
   liftIO $ hspec $ spec $ return $ app pool
   where examplePatient = Patient "Claudio" "Ortolina"
 
