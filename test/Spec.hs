@@ -32,13 +32,13 @@ spec :: IO Application -> Spec
 spec application = with application $ do
   describe "GET /patients" $ do
     let req = jsonGet "/patients"
-    let respBody = [json|[{"first_name":"Claudio","last_name":"Ortolina"}]|]
+    let respBody = [json|[{"id":1,"firstName":"Claudio","lastName":"Ortolina"}]|]
     it "responds with 200" $ req `shouldRespondWith` 200
     it "responds with [patient]" $ req `shouldRespondWith` respBody
 
   describe "GET /patients/:patient_id with existing patient" $ do
     let req = jsonGet "/patients/1"
-    let respBody = [json|{"first_name":"Claudio","last_name":"Ortolina"}|]
+    let respBody = [json|{"id":1,"firstName":"Claudio","lastName":"Ortolina"}|]
     it "responds with 200" $ req `shouldRespondWith` 200
     it "responds with patient" $ req `shouldRespondWith` respBody
 
@@ -47,7 +47,7 @@ spec application = with application $ do
     it "responds with 404" $ req `shouldRespondWith` 404
 
   describe "POST /patients" $ do
-    let reqBody = [json|{"first_name":"Ada","last_name":"Lovelace"}|]
+    let reqBody = [json|{"firstName":"Ada","lastName":"Lovelace"}|]
     let req = jsonPost "/patients" reqBody
     let respBody = "3"
     it "responds with 200" $ req `shouldRespondWith` 200

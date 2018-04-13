@@ -7,13 +7,12 @@ import           Schema
 runMigrations :: ConnectionPool -> IO ()
 runMigrations = runSqlPool (runMigration migrateAll)
 
-selectPatients :: ConnectionPool -> IO [Patient]
+selectPatients :: ConnectionPool -> IO [Entity Patient]
 selectPatients pool = do
-  patientList <- runSqlPool (selectList [] []) pool
-  return $ map (\(Entity _ u) -> u) patientList
+  runSqlPool (selectList [] []) pool
 
-selectPatient :: ConnectionPool -> Key Patient -> IO (Maybe Patient)
-selectPatient pool patientId = runSqlPool (get patientId) pool
+selectPatient :: ConnectionPool -> Key Patient -> IO (Maybe (Entity Patient))
+selectPatient pool patientId = runSqlPool (getEntity patientId) pool
 
 insertPatient :: ConnectionPool -> Patient -> IO (Key Patient)
 insertPatient pool patient = runSqlPool (insert patient) pool

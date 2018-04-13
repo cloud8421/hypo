@@ -5,14 +5,11 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE FlexibleInstances          #-}
 
 module Schema
 where
 
-import           Data.Aeson.TH
-import           Data.Aeson.Casing              ( aesonPrefix
-                                                , snakeCase
-                                                )
 import           Data.Text                      ( Text )
 import           Database.Persist.TH            ( mkMigrate
                                                 , mkPersist
@@ -23,11 +20,11 @@ import           Database.Persist.TH            ( mkMigrate
 import           GHC.Generics
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-Patient
+Patient json
     firstName Text
     lastName  Text
     deriving  Eq Show Generic
-Exam
+Exam json
     type      Text
     patientId PatientId
     value     Text
@@ -35,6 +32,3 @@ Exam
     notes     Text
     deriving Eq Show Generic
 |]
-
-deriveJSON (aesonPrefix snakeCase) ''Patient
-deriveJSON (aesonPrefix snakeCase) ''Exam

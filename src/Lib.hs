@@ -22,10 +22,10 @@ import           Schema
 import           Store
 import           Data.Text                            (Text)
 
-type GetPatients = "patients" :> Get '[JSON] [Patient]
+type GetPatients = "patients" :> Get '[JSON] [Entity Patient]
 
 type GetPatient = "patients" :> Capture "patient_id" (Key Patient)
-                             :> Get '[JSON] Patient
+                             :> Get '[JSON] (Entity Patient)
 
 type PostPatients = "patients" :> ReqBody '[JSON] Patient
                                :> Post '[JSON] (Key Patient)
